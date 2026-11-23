@@ -4,7 +4,7 @@
 
 **[Play ADHD Todo in your browser](https://yokohamabluesss.github.io/adhd-todo/)** on a phone or computer. Your progress saves in the browser you play in.
 
-The offline Windows edition requires Microsoft Edge to be installed on the computer. [Windows setup and illustrated guides](windows/README.md)
+**[Download ADHD Todo for Windows](https://github.com/Yokohamabluesss/adhd-todo/releases/tag/windows-v0.1.0-preview.1)** from the release page under **Assets**. The offline app requires Windows x64 with Microsoft Edge installed. [Windows setup and illustrated guides](windows/README.md)
 
 ADHD Todo is for people with ADHD. Let chance pick your first small step and a lucky Bingo be your cue to call it a day. Enjoy your round!
 
@@ -93,7 +93,7 @@ The author designed the task flow and game rules. AI assisted with implementatio
 
 **[点这里直接玩 ADHD Todo](https://yokohamabluesss.github.io/adhd-todo/)**。手机和电脑浏览器都可以打开，进度保存在你试玩的浏览器里。
 
-Windows 版支持双击离线使用，需要电脑已安装 Microsoft Edge。[Windows 版说明和图文指南](windows/README.md#zh)
+**[下载 ADHD Todo Windows 版](https://github.com/Yokohamabluesss/adhd-todo/releases/tag/windows-v0.1.0-preview.1)**，在发布页的 **Assets** 下点 `ADHD.Todo.exe`。本版支持离线使用，需要 Windows x64 和本机已安装的 Microsoft Edge。[Windows 版说明和图文指南](windows/README.md#zh)
 
 希望有 ADHD 的你既能轻松开始，也能安心收工。让抽签帮你选第一步，遇上 Bingo 就可以说「今天做到这里也很好」。祝你玩得开心！
 
