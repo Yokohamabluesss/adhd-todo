@@ -4,3 +4,6 @@ dist/
 *.sqlite
 !tests/fixtures/v1-board.sqlite
 /maintainer/
+/windows/.build/
+/windows/out/
+__pycache__/

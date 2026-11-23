@@ -4,10 +4,10 @@ import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { chromium } from 'playwright-core';
 
-const directory = 'docs/walkthrough';
+const directory = (process.env.QA_DOCS_ROOT || 'docs') + '/walkthrough';
 const lan = process.argv.find(arg => arg.startsWith('--lan='))?.slice(6);
-const desktopUrl = 'http://127.0.0.1:4174';
-const mobileUrl = lan ? 'http://' + lan + ':4175' : desktopUrl;
+const desktopUrl = process.env.DESKTOP_QA_URL || 'http://127.0.0.1:4174';
+const mobileUrl = process.env.TOUCH_QA_URL || (lan ? 'http://' + lan + ':4175' : desktopUrl);
 let server;
 let browser;
 

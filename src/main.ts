@@ -3,7 +3,9 @@ import { tr, language, setLanguage } from './i18n.ts';
 import { esc } from './copy.ts';
 import * as game from './rules.ts';
 import type { Board, Task, Library, Priority, Workspace } from './rules.ts';
-import { channel, exportBoard, exportSave, importSave, loadOrCommit } from './storage.ts';
+import { channel, exportBoard, exportSave, importSave, loadOrCommit, playDesktop } from './storage.ts';
+import { applyCommand, type BoardCommand } from './board-command.ts';
+import { desktop, pickDesktop } from './desktop.ts';
 import type { Loaded } from './storage.ts';
 import { editSteps } from './steps.ts';
 import { bindNoteFields, noteDetails, noteFields, notePreview } from './task-notes.ts';
@@ -52,15 +54,19 @@ async function reload() {
   if (dialog.open) dialog.close();
   render();
 }
-async function commit(change: (b: Board, state: Workspace) => void): Promise<boolean> {
+async function commit(change: BoardCommand | ((b: Board, state: Workspace) => void)): Promise<boolean> {
   if (busy) return false;
   busy = true;
   try {
-    const state = structuredClone(loaded.state);
-    const current=state.boards.find(b => b.id === boardId)!;
-    change(current,state);
-    game.discardUnusedImages(current);
-    loaded = await loadOrCommit({ state, revision: loaded.revision });
+    if (desktop && typeof change !== 'function') {
+      loaded = await playDesktop(boardId,loaded.revision,change);
+    } else {
+      const state = structuredClone(loaded.state);
+      const current=state.boards.find(b => b.id === boardId)!;
+      if (typeof change === 'function') change(current,state); else applyCommand(current,change);
+      game.discardUnusedImages(current);
+      loaded = await loadOrCommit({ state, revision: loaded.revision });
+    }
     animation++;
     return true;
   } catch (err) {
@@ -112,7 +118,7 @@ function confirmReset(scope: game.ResetScope) {
     if (scope === 'today' && game.roundDay(now,b.dayStart) !== day) {
       message('A new board day has begun. Open Reset again to review the date.'); return;
     }
-    if (await commit(current => game.resetBoard(current,scope,now))) {
+    if (await commit({kind:'reset',scope,day})) {
       resetSelection(); render(); message(scope === 'grid' ? 'All squares cleared.' : 'Progress reset.');
     }
   });
@@ -327,10 +333,8 @@ function settings() {
   previewPair();
 }
 async function placeOrMove(s: Source, i: number) {
-  const ok = await commit(b => {
-    if (s.kind === 'board') game.move(b,s.index,i);
-    else game.place(b,s.kind,s.index,i);
-  });
+  const ok = await commit(s.kind === 'board' ? {kind:'move',from:s.index,to:i} :
+    {kind:'place',library:s.kind,from:s.index,to:i});
   source = null; selected = ok ? i : null; render();
 }
 async function chooseCell(i: number) {
@@ -342,7 +346,8 @@ async function chooseCell(i: number) {
   animation++; render();
 }
 async function animateDraw() {
-  const b = board(), pool = game.candidates(b), winner = game.draw(b), token = ++animation;
+  const b = board(), pool = game.candidates(b), token = ++animation;
+  const winner = desktop ? await pickDesktop(b.id,loaded.revision) : game.draw(b);
   for (let n = 0; n < 10; n++) {
     if (animation !== token) return;
     app.querySelector('.preview')?.classList.remove('preview');
@@ -350,7 +355,7 @@ async function animateDraw() {
     app.querySelector(`[data-cell="${preview}"]`)?.classList.add('preview');
     await new Promise(resolve => setTimeout(resolve, 65));
   }
-  if (animation === token && await commit(current => game.recordDraw(current,winner))) {
+  if (animation === token && await commit({kind:'recordDraw',index:winner})) {
     selected = winner; render(); message(tr('Drawn: {0}',(b.cells[winner] as Task).title));
   }
 }
@@ -431,28 +436,28 @@ async function action(key: string) {
       break;
     }
     case 'start':
-      if (await commit(b => game.start(b))) switchTab('Board'); break;
+      if (await commit({kind:'start'})) switchTab('Board'); break;
     case 'draw': await animateDraw(); break;
     case 'properties': if (i !== null && game.isTask(task)) taskForm(task.library,i,true); break;
     case 'complete':
       if (i !== null && game.isTask(task)) confirmAction('Complete this task?',task.title,'Complete task',async () => {
-        await commit(b => game.complete(b,i)); resetSelection(); render();
+        await commit({kind:'complete',index:i}); resetSelection(); render();
       }); break;
     case 'shuffle':
-      if (await commit(b => game.shuffle(b))) { resetSelection(); render(); message('Board shuffled.'); } break;
+      if (await commit({kind:'shuffle'})) { resetSelection(); render(); message('Board shuffled.'); } break;
     case 'finish': {
       const warning = game.lines(b).length > 0 && game.hasX(b);
       confirmAction('End this round?', tr(warning ? 'There are still must-do tasks for today or tomorrow. End this round anyway?' :
         'Unfinished tasks will stay in their squares for next time.'), 'End round',async () => {
-        if (await commit(b => game.finish(b))) switchTab('Set up');
+        if (await commit({kind:'finish'})) switchTab('Set up');
       },'Keep going'); break;
     }
     case 'remove':
-      if (i !== null && await commit(b => game.removeFromBoard(b,i))) { resetSelection(); render(); } break;
+      if (i !== null && await commit({kind:'return',index:i})) { resetSelection(); render(); } break;
     case 'delete-placement':
       if (i !== null && game.isTask(task)) {
         confirmAction('Delete task from board?',tr('Delete “{0}” from this square? Its notes and steps go with it. Both libraries keep their current contents.',task.title),'Delete task',async () => {
-          if (await commit(current => game.deletePlacedTask(current,i))) { resetSelection(); render(); }
+          if (await commit({kind:'discard',index:i})) { resetSelection(); render(); }
         });
       }
       break;
@@ -467,7 +472,7 @@ async function action(key: string) {
       }); break;
     }
     case 'save-menu':
-      showMenu('Board saves','Your boards are saved in this browser. Take a SQLite file to another device to continue.',
+      showMenu('Board saves',desktop ? 'Your boards are saved on this computer. Take a SQLite file to another device to continue.' : 'Your boards are saved in this browser. Take a SQLite file to another device to continue.',
         btn('export','Download all boards','primary') + btn('export-board','Download current board') + btn('import','Import a save') + btn('reset-menu','Reset…') + btn('close','Close','quiet')); break;
     case 'delete-board': {
       const last = loaded.state.boards.length === 1;
@@ -571,7 +576,7 @@ app.addEventListener('drop',e => {
   if (el?.dataset.cell !== undefined) void placeOrMove(s,Number(el.dataset.cell)).catch(report);
   else if (s.kind === 'board' && shelf) {
     const slot = el?.dataset.slot;
-    void commit(b => game.removeFromBoard(b, s.index, {library:shelf, slot:slot === undefined ? undefined : Number(slot)}))
+    void commit({kind:'return',index:s.index,destination:{library:shelf,slot:slot === undefined ? undefined : Number(slot)}})
       .then(ok => { if (ok) { resetSelection(); render(); } }).catch(report);
   }
   else if (el?.dataset.library === s.kind && s.kind !== 'board') {

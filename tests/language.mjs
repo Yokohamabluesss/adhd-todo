@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-export async function checkLanguage(browser) {
+export async function checkLanguage(browser,url='http://127.0.0.1:4174/') {
   const context = await browser.newContext({viewport:{width:390,height:844}});
   try {
     const page = await context.newPage();
@@ -10,7 +10,7 @@ export async function checkLanguage(browser) {
     const button = name => page.getByRole('button',{name,exact:true});
     const click = name => button(name).click();
     const dialog = page.getByRole('dialog');
-    await page.goto('http://127.0.0.1:4174/');
+    await page.goto(url);
     await page.getByRole('heading',{name:'Task board',exact:true}).waitFor();
     for (const width of [1280,390]) {
       await page.setViewportSize({width,height:844});

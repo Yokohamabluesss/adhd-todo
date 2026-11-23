@@ -2,18 +2,18 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 
-const folder = 'docs/detailed-walkthrough';
-const url = 'http://127.0.0.1:4174/';
+const folder = (process.env.QA_DOCS_ROOT || 'docs') + '/detailed-walkthrough';
+const url = process.env.DESKTOP_QA_URL || 'http://127.0.0.1:4174/';
 const browser = await chromium.launch({ channel:process.env.BROWSER_CHANNEL || 'msedge' });
 const errors = [];
-async function openBoard() {
+async function openBoard(target = url) {
   const context = await browser.newContext({viewport:{width:1200,height:880},locale:'en-US',timezoneId:'America/Toronto',acceptDownloads:true});
   const page = await context.newPage();
   page.on('pageerror', e => errors.push(e.message));
   page.setDefaultTimeout(6000);
   // Keep the sample board day stable when regenerating the guide.
   await page.clock.setFixedTime(new Date('2026-11-20T17:00:00Z'));
-  await page.goto(url);
+  await page.goto(target);
   await page.getByRole('heading',{name:'Task board',exact:true}).waitFor();
   return page;
 }
@@ -69,6 +69,7 @@ try {
   }
   await shot(p,'02-libraries',p.locator('.libraries'));
   await click(p,'Start round');
+  await button(p,'Draw a task').waitFor();
   await click(p,'Guide');
   const odds = p.locator('.guide-page section').filter({has:p.getByRole('heading',{name:'How the draw works'})});
   await odds.getByText(/There are 1 Must-do tasks/).waitFor();
@@ -117,7 +118,7 @@ try {
   const bytes = await readFile(await (await download).path());
   assert.equal(bytes.subarray(0,15).toString(),'SQLite format 3');
 
-  const copy = await openBoard();
+  const copy = await openBoard(process.env.IMPORT_QA_URL || url);
   await restore(copy,bytes,true);
   await square(copy,0).click(); await click(copy,'Task steps');
   await dialog(copy).getByText('1 of 2 steps completed').waitFor();
@@ -135,7 +136,8 @@ try {
   await copy.getByRole('heading',{name:'Set up',exact:true}).waitFor();
   assert.equal(await copy.locator('.cell.done').count(),0);
   await shot(copy,'18-next-round',copy.locator('.layout'));
-  await click(copy,'Start round'); await square(copy,0).click(); await click(copy,'Task steps');
+  await click(copy,'Start round'); await button(copy,'Draw a task').waitFor();
+  await square(copy,0).click(); await click(copy,'Task steps');
   await dialog(copy).getByText('1 of 2 steps completed').waitFor();
   assert.deepEqual(errors,[]);
   console.log('18 screenshots captured. Weights, completion, steps, refresh, SQLite transfer, all three reset previews and next-round carryover verified.');

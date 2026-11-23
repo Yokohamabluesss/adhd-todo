@@ -4,6 +4,8 @@
 
 **[Play ADHD Todo in your browser](https://yokohamabluesss.github.io/adhd-todo/)** on a phone or computer. Your progress saves in the browser you play in.
 
+For the offline desktop app, see the [Windows edition and its illustrated guides](windows/README.md).
+
 ADHD Todo is for people with ADHD. Let chance pick your first small step and a lucky Bingo be your cue to call it a day. Enjoy your round!
 
 On your first visit, **Sample board** opens with all nine squares filled. Choose **Start round → Draw a task** to try it immediately, or open **Stats** to explore 30 simulated days, 38 finished rounds and 75 task completions. Choose **+ Board** for an empty personal board. The language button beside the logo switches between English and Simplified Chinese.
@@ -75,7 +77,7 @@ A separate Python study compares the chance of making Bingo after 3–7 completi
 | Stage | Plans |
 | --- | --- |
 | Current | Playtest the web app, especially starting, resuming and moving rounds between browsers. **Update** lists recent changes and planned features. |
-| Next version | Offer a downloadable Python service that reads and writes a local SQLite file and can continue an exported web round. |
+| Windows edition | The desktop app uses the same interface, with Python board rules and a local SQLite file. [Run, build and understand the Windows edition](windows/README.md) |
 | Planned features | Refine draw rules and round goals. Add an optional timer, Pomodoro sessions, finer time increments and comparisons of planned and actual focus time. Use scripts and an optional AI API to interpret personal board statistics. |
 | Later candidates | Per-task targets, luck mode, optional deadline-based priority changes, and desktop or mobile clients. |
 
@@ -90,6 +92,8 @@ The author designed the task flow and game rules. AI assisted with implementatio
 # ADHD Todo 中文说明
 
 **[点这里直接玩 ADHD Todo](https://yokohamabluesss.github.io/adhd-todo/)**。手机和电脑浏览器都可以打开，进度保存在你试玩的浏览器里。
+
+想在电脑上双击离线使用，可以看 [Windows 版和配套图文指南](windows/README.md#zh)。
 
 希望有 ADHD 的你既能轻松开始，也能安心收工。让抽签帮你选第一步，遇上 Bingo 就可以说「今天做到这里也很好」。祝你玩得开心！
 
@@ -162,7 +166,7 @@ Windows PowerShell 下可用 `npm.cmd`。要使用正式构建，先停止开发
 | 阶段 | 计划 |
 | --- | --- |
 | 当前 | 试玩网页版，优先检查开局、恢复进度和跨浏览器迁移。程序的 **Update**（更新）页面列出近期变化和计划功能。 |
-| 下一版 | 提供本机运行的 Python 服务，读写本地 SQLite 文件，可以接着网页版导出的轮次做。 |
+| Windows 版 | 桌面版复用同一套界面，由 Python 执行棋盘规则、读写本机 SQLite。[运行、打包和架构说明](windows/README.md#zh) |
 | 功能计划 | 优化抽选规则、增加轮次目标，加入可选计时器、番茄钟、更细的时间单位和预计与实际专注时长的对照。用脚本和可选 AI 接口解读个人统计。 |
 | 后续候选 | 单项任务目标、幸运模式、临期可选升优先级，以及独立桌面或手机客户端。 |
 

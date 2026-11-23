@@ -1,4 +1,5 @@
 import { tr } from './i18n.ts';
+import { desktop } from './desktop.ts';
 import { esc } from './copy.ts';
 import { isTask } from './rules.ts';
 import type { Board } from './rules.ts';
@@ -40,13 +41,14 @@ export function guide(board: Board) {
     <section class="panel"><h2>${tr("Bingo and ending a round")}</h2><p>${tr("Complete a full row, column or either main diagonal. Only squares cleared this round count. With all Must-do tasks finished, a line earns success. Completing every task you placed also succeeds, even on a sparse board. You can keep going or end early. Ending with a line and an unfinished Must-do asks for confirmation. Unfinished tasks stay in their squares for the next round.")}</p></section>
     <section class="panel"><h2>${tr("Shuffle and history")}</h2><p>${esc(tr("Completing a task earns at least one point, then one per full 30 planned minutes (59 minutes gives 1, 60 gives 2). A shuffle costs one point per square completed this round. Completed marks move too. With row grouping enabled, tasks stay in their row. Round summaries in Stats use the day a round was started. In Set up → Board settings, choose Day starts at (default 04:00 local time). For this board the day starts at {0}. Existing rounds keep their assigned dates when you change it.",board.dayStart))}</p></section>
     <section class="panel"><h2>${tr("Read your stats")}</h2><p>${tr("Open Stats for the current board. Daily calendar is the default chart. Choose Per-round bars to see completions by round. Hover over or tap a day for details. A task finished in a later board day appears on that later date. Choose a day filter to update the totals and charts. Expand a day to see each round, including rounds with zero completions. First-draw adoption compares the first suggestion with the next task completed. Expand Tasks created, placed and completed to choose an intake period and see how many of those tasks are finished today.")}</p></section>
-    <section class="panel"><h2>${tr("Bring your board with you")}</h2><p>${tr("Progress saves automatically in this browser. Under Saves, Download current board includes its libraries, notes, steps and round history. Import a save → Add board opens it alongside your other boards. Download all boards makes a full backup. Import a save → Replace boards restores that backup over the entire profile.")}</p></section>
+    <section class="panel"><h2>${tr("Bring your board with you")}</h2><p>${tr(desktop ? "Progress saves automatically to a SQLite file on this computer. Under Saves, Download current board includes its libraries, notes, steps and round history. Import a save → Add board opens it alongside your other boards. Download all boards makes a full backup. Import a save → Replace boards restores that backup over all your boards." : "Progress saves automatically in this browser. Under Saves, Download current board includes its libraries, notes, steps and round history. Import a save → Add board opens it alongside your other boards. Download all boards makes a full backup. Import a save → Replace boards restores that backup over the entire profile.")}</p></section>
     <section class="panel"><h2>${tr("Reset a board")}</h2><p>${tr("Open Saves → Reset… and choose an option for the current board. Reset all progress erases its history and points. Reset today's progress applies to rounds started on the current board day, using the start time set on this board. Both options restore completed tasks from an affected open round and reopen the corresponding steps on the board. Tasks from closed rounds stay off the board. Clear all squares empties the grid, including one-offs, and closes an open round with its current result. Points and history are kept. Review the board name and effects, then cancel or confirm. The libraries and board settings are kept in all three cases.")}</p></section>
   </div>`;
 }
 export function updates() {
   return `<div class="stack guide-page">
     <section class="panel"><h2>${tr("Latest changes")}</h2><ul>
+      <li>${tr("Continue a web round in the Windows app using a SQLite save.")}</li>
       <li>${tr("Download one board and add it to another browser. Right-click an unfinished square to delete its task after confirmation. New Task steps grids start at 2 × 2.")}</li>
       <li>${tr("Set up the sample board with question marks and three ready-to-place one-off tasks. Every board now explains day start, board size and row grouping in Board settings.")}</li>
       <li>${tr("Switch between English and Simplified Chinese from the top bar.")}</li>
@@ -62,6 +64,5 @@ export function updates() {
       <li>${tr("Refine the draw rules and offer more ways to set a round goal.")}</li>
       <li>${tr("Add an optional task timer and Pomodoro sessions with focus and break periods.")}</li>
       <li>${tr("Support shorter time increments and show actual focus time alongside planned minutes in Stats.")}</li>
-      <li>${tr("Run a downloadable Python version with a local SQLite save.")}</li>
     </ul></section></div>`;
 }

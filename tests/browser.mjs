@@ -5,14 +5,16 @@ import initSqlJs from 'sql.js';
 import { checkLanguage } from './language.mjs';
 
 const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge', headless: true });
+const desktopUrl = process.env.DESKTOP_QA_URL;
+const shots = process.env.QA_SCREENSHOTS || 'docs';
 try {
-  await checkLanguage(browser);
+  await checkLanguage(browser,process.env.LANGUAGE_QA_URL);
   const context = await browser.newContext({ viewport:{ width:1280, height:850 },acceptDownloads:true });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.setDefaultTimeout(5000);
-  await page.goto('http://127.0.0.1:4174/');
+  await page.goto(desktopUrl || 'http://127.0.0.1:4174/');
   const button = (root,name) => root.getByRole('button',{name,exact:true});
   const click = name => button(page,name).click();
   const cell = i => page.locator('[data-cell="'+i+'"]');
@@ -113,10 +115,10 @@ try {
   await click('Draw a task');
   await page.getByText('Selected task',{exact:true}).waitFor();
   assert.equal(await cell(4).getAttribute('aria-pressed'),'true');
-  await mkdir('docs',{recursive:true});
+  await mkdir(shots,{recursive:true});
   await page.waitForFunction(() => document.querySelector('#notice').textContent === '',null,{timeout:10000});
   await page.mouse.move(0,0);
-  await page.screenshot({path:'docs/board.png',fullPage:true});
+  await page.screenshot({path:shots+'/board.png',fullPage:true});
   for (const i of [0,1,2]) {
     await cell(i).click(); await click('Complete task'); await confirm('Complete task');
     await page.waitForFunction(i => document.querySelector('[data-cell="'+i+'"]').classList.contains('done'),i);
@@ -186,8 +188,12 @@ try {
   await page.getByText(/Standard weight: 3. Low weight: 2/).waitFor();
   await click('Board');
   const oldSave = await readFile(new URL('./fixtures/v1-board.sqlite',import.meta.url));
-  // Simulate the exact IndexedDB record left by the previous app in this test profile.
-  await page.evaluate(async bytes => {
+  if (desktopUrl) {
+    await page.locator('#import').setInputFiles({name:'v1.sqlite',mimeType:'application/octet-stream',buffer:oldSave});
+    await confirm('Replace boards');
+    await page.getByRole('heading',{name:'Legacy study'}).waitFor();
+  } else await page.evaluate(async bytes => {
+    // Simulate the exact IndexedDB record left by the previous web app.
     const db = await new Promise(resolve => {
       const r = indexedDB.open('adhd-todo-board',1); r.onsuccess = () => resolve(r.result);
     });
@@ -264,12 +270,14 @@ try {
   await reset('Reset all progress',true);
   await page.getByText('0 pts',{exact:true}).waitFor();
   const taskCount = await page.locator('.cell:not(.empty):not(.done)').count();
-  await click('Start round'); await cell(1).click(); await click('Complete task'); await confirm('Complete task');
+  await click('Start round'); await button(page,'Draw a task').waitFor();
+  await cell(1).click(); await click('Complete task'); await confirm('Complete task');
   await page.locator('.cell.done').waitFor();
   await reset("Reset today's progress",true); await page.reload(); await cell(1).waitFor();
   assert.equal(await page.locator('.cell:not(.empty):not(.done)').count(),taskCount);
   await page.getByText('0 pts',{exact:true}).waitFor();
-  await click('Start round'); await cell(1).click(); await click('Complete task'); await confirm('Complete task');
+  await click('Start round'); await button(page,'Draw a task').waitFor();
+  await cell(1).click(); await click('Complete task'); await confirm('Complete task');
   await page.locator('.cell.done').waitFor();
   const beforeClear = await page.locator('.counter b').innerText();
   await reset('Clear all squares',true); await page.reload(); await cell(1).waitFor();
@@ -295,7 +303,7 @@ try {
   assert.notEqual(personalBoard,sampleId);
   assert.equal(await page.locator('.history-day').count(),30);
   assert.equal(await page.locator('.round-bars > div').count(),38);
-  await page.locator('main').screenshot({path:'docs/stats-sample.png'});
+  await page.locator('main').screenshot({path:shots+'/stats-sample.png'});
   const chart=page.getByRole('combobox',{name:'Activity chart'});
   assert.equal(await chart.inputValue(),'calendar');
   await page.getByRole('heading',{name:'Daily activity',exact:true}).waitFor();
@@ -305,7 +313,7 @@ try {
   const recent=page.locator('[data-day="'+recentDay+'"]');
   await recent.hover();
   assert.equal(await page.locator('[data-day-detail]').innerText(),await recent.getAttribute('aria-label'));
-  await page.locator('section').filter({has:chart}).screenshot({path:'docs/daily-calendar.png'});
+  await page.locator('section').filter({has:chart}).screenshot({path:shots+'/daily-calendar.png'});
   await recent.focus(); await page.keyboard.press(recentDay.endsWith('-01-01')?'ArrowDown':'ArrowUp');
   assert.notEqual(await page.locator('[data-day-detail]').innerText(),await recent.getAttribute('aria-label'));
   await page.getByLabel('Show days').selectOption('Unfinished');
@@ -361,6 +369,7 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Wide Stats on phone');
   await page.setViewportSize({width:1280,height:850});
   await click('Board'); await click('Start round');
+  await button(page,'Draw a task').waitFor();
   await page.locator('.cell:not(.empty):not(.done)').first().click();
   await click('Complete task'); await confirm('Complete task');
   await page.locator('.cell.done').first().waitFor();
@@ -382,7 +391,7 @@ try {
   const touch = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   try {
     const phone=await touch.newPage();
-    await phone.goto(page.url()); await button(phone,'Stats').tap();
+    await phone.goto(process.env.TOUCH_QA_URL || page.url()); await button(phone,'Stats').tap();
     await phone.getByLabel('Activity chart').selectOption('calendar');
     const dayCell=phone.locator('.cal-day').last();
     await dayCell.tap();
@@ -420,7 +429,9 @@ try {
     assert.ok(Math.abs(note.x-controls.x)<1 && Math.abs(note.width-controls.width)<1);
   }
   await checkNoteCard();
-  await cell(0).click(); await slot('daily',0).click(); await cell(1).click();
+  await cell(0).click(); await cell(0).getByText('Read',{exact:true}).waitFor();
+  await slot('daily',0).click(); await cell(1).click();
+  await cell(1).getByText('Read',{exact:true}).waitFor();
   await cell(0).click({button:'right'});
   await page.locator('.task-menu').getByRole('button',{name:'Edit note'}).click();
   await page.getByLabel('Note text').fill('Only this square'); await confirm('Save note');
