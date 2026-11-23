@@ -2,7 +2,7 @@
 
 [简体中文](#zh)
 
-Double-click **ADHD Todo.exe** on a Windows x64 PC with Microsoft Edge installed. It opens the same task board in a dedicated window. The executable includes Python, the interface, and the SQLite runtime. Everyday use works offline. Close the window when you finish and open the executable to resume.
+**Requires Windows x64 and a local installation of Microsoft Edge.** Double-click **ADHD Todo.exe** to open the board in a dedicated Edge window. The executable includes Python, the interface, and SQLite, so you can play offline. Close the window when you finish and reopen the executable to resume.
 
 The first launch opens a full sample board. Choose **Start round → Draw a task** to let the board pick where to begin. Three squares say “Write my paper”. Placing several copies gives that project more chances in an eligible draw. When a Bingo feels like enough for today, choose **End round**. Unfinished tasks stay on the board for next time.
 
@@ -28,20 +28,15 @@ The default save is `%LOCALAPPDATA%\ADHD Todo\boards.sqlite`. Paste `%LOCALAPPDA
 
 Use **Saves** to back up while the app is open. Notes, images, placed tasks, steps, points, and statistics travel together. Existing web backups (v1–v3) and individual board transfers (v4) use the same import and confirmation screens. The hosted web app and this local file advance independently after transfer.
 
-## Why reuse the interface and put the game in Python?
+## Architecture
 
-Consider confirming a 60-minute task. The same TypeScript dialog collects the confirmation on both platforms. In Windows it sends the operation, board ID, square and expected save revision to Python. Python reads the current board, checks the round and square, adds two points, records the completion and evaluates Bingo. SQLite commits these changes and the new revision together. The interface then renders the committed result. Two windows confirming from the same revision can produce only one completion.
+| Component | Responsibilities |
+| --- | --- |
+| TypeScript interface | Shares the web edition’s screens, input handling, animations, task forms and translations. It validates imported saves and runs the Stats queries. |
+| Python board rules | Handles task placement, weighted draws, shuffling, scoring, Bingo, round completion and resets. |
+| SQLite storage | Python reads and writes boards, rounds, completions and events. Each write checks the workspace revision and commits the changes in one transaction. The database exposes the same reporting views used by Stats. |
 
-| Boundary | What lives here | What it makes possible |
-| --- | --- | --- |
-| Shared TypeScript interface | Rendering, input, animation, task and settings forms, notes and image resizing, language, sample generation, archive validation, SQL reports | A layout or translation fix reaches both editions. Stats uses the same SQL views, filters and denominators in both. |
-| Python board rules | Weighted draws and eligibility, scoring, line detection, success, shuffling, manual endings, day resets and transferring squares | Another interface can call the same actions. A script can exercise a fixed board and clock without opening a window. |
-| Python SQLite storage | Actual board, round, completion and event tables, transaction boundaries and revision checks | A local reporting script can query durable records with ordinary SQLite. A failed write rolls back. No manual export is needed for a read-only local report. |
-| Local entry point | A loopback HTTP service plus an Edge app window | Users get a double-click launch. Python and its assets ship together; the public website can still run on static hosting. |
-
-The two editions have separate gameplay implementations. When a rule changes, update both and run the parity suite. Forms and validated imports currently send workspace snapshots, while gameplay sends individual commands. Stats computes its queries on the UI side from the saved state. The desktop database also exposes the same views to SQL tools.
-
-**Future interfaces and cloud use.** A desktop integration or bot could call the Python rules and storage directly. For example, a Discord command could identify a board and issue the same completion command. A cloud service could reuse that operation and its transaction tests. It would also need authenticated users, board-level authorization, request deduplication for network retries, an explicit time zone for each board and a conflict policy for offline edits. A cloud API should limit snapshot replacement to an authorized restore operation. The current service binds to the local machine and uses a per-launch session token. It serves one Windows user's workspace.
+At launch, the executable starts a Python HTTP service on `127.0.0.1` and opens the interface in Microsoft Edge’s app mode. The interface sends gameplay commands to the service. Form edits and validated imports send a workspace snapshot. The interface displays the state returned after the transaction commits.
 
 ## Build from source
 
@@ -74,7 +69,7 @@ The rule suite compares intermediate Python and TypeScript board states, rollbac
 
 # ADHD Todo Windows 版
 
-在装有 Microsoft Edge 的 Windows x64 电脑上，双击 **ADHD Todo.exe** 即可打开独立棋盘窗口。程序自带 Python、前端资源和 SQLite，日常使用可以离线。用完直接关窗，下次双击继续。
+**运行要求为 Windows x64，且本机已安装 Microsoft Edge。** 双击 **ADHD Todo.exe** 后，棋盘会在独立的 Edge 窗口中打开。程序自带 Python、界面资源和 SQLite，可以离线使用。用完直接关窗，下次双击继续。
 
 首次启动会打开满盘示例。点**开始本轮 → 抽一项任务**，让棋盘帮你决定从哪里开始。示例里有三个格子都叫「Write my paper」：想多做写论文这件事，就可以多放几份，增加它在符合条件时被抽中的机会。连成 Bingo 后，如果觉得今天可以收工了，就手动结束。未完成的事下轮还能接着做。
 
@@ -100,20 +95,15 @@ The rule suite compares intermediate Python and TypeScript board states, rollbac
 
 开着程序时可直接通过**存档**菜单做备份。任务、步骤、文字与图片备注、点数和统计会一起带走。网页版旧备份（v1–v3）和单棋盘文件（v4）沿用相同的导入及确认流程。迁移后，两端各自记录新的进度。
 
-## 为什么复用界面，让 Python 负责玩法
+## 架构
 
-以确认完成一个 60 分钟任务为例。两个版本弹出同一个 TypeScript 确认框。Windows 版把操作、棋盘 ID、格子位置和它看到的存档版本交给 Python。Python 读取当前盘面，确认这一轮仍然有效、这一格仍待完成，加 2 点、记录完成、判断 Bingo。SQLite 把这些变化和新版本号一次提交，界面收到结果后再点亮格子。即使两个窗口同时确认同一格，也只会成功一次。
+| 组件 | 职责 |
+| --- | --- |
+| TypeScript 界面 | 与网页版共用页面、输入处理、动画、任务表单和翻译。负责校验导入的存档，并运行统计页的 SQL 查询。 |
+| Python 棋盘规则 | 处理任务上板、加权抽选、打乱、计分、Bingo 判定、轮次结束和重置。 |
+| SQLite 存储 | Python 读写棋盘、轮次、完成记录和操作事件。每次写入时校验工作区版本，并在同一事务中提交变更。数据库包含统计页使用的 SQL 视图。 |
 
-| 部分 | 具体负责什么 | 为何值得分开 |
-| --- | --- | --- |
-| 共用 TypeScript 界面 | 页面、操作反馈、动画、任务与设置表单、备注图片缩放、双语、示例、存档校验、SQL 报表 | 修改布局或译文时两版一起生效。统计使用相同的查询、筛选条件和分母。 |
-| Python 棋盘规则 | 候选和加权抽选、计分、判线、成功、打乱、手动结束、按棋盘日重置、主格放置和撤回 | 新入口可以直接调用业务操作。给定相同盘面和时间，测试可以在没有窗口时逐步核对结果。 |
-| Python SQLite 存储 | 读写棋盘、轮次、完成和事件表，执行事务并检查存档版本 | 本机脚本可以查询一份固定的 SQLite 文件，生成周报时不必每次导出。事务中途出错会回滚。 |
-| 本机启动入口 | 仅监听本机的 HTTP 服务和独立 Edge 窗口 | 用户双击即可用。Python 和资源随程序分发，公开网页版仍能使用静态托管。 |
-
-这套架构也有维护成本。两个版本各有一份玩法实现，规则变化时需要一起改，并用同一盘面跑对照测试。目前对局发送单个操作，表单编辑和已校验的导入通过工作区快照保存。Stats 根据已保存的状态，在界面侧运行共享 SQL 查询；桌面数据库也向本地 SQL 工具提供相同的统计视图。
-
-**后续加接口和上云。** 将来如果做桌面插件或机器人，可以在新入口调用现有 Python 规则和存储。例如 Discord 指令选定棋盘后，可以调用同一个「完成这格」操作。迁移到云端也能沿用这些操作和事务测试。真正做跨端同步时，还要补上登录、每块棋盘的访问权限、网络重试去重、每块棋盘的明确时区，以及离线修改冲突的处理规则。云 API 还应将整份快照替换限制在已授权的恢复操作。当前服务只监听本机，用每次启动生成的令牌访问当前 Windows 用户的数据。
+双击 exe 后，程序在 `127.0.0.1` 启动 Python HTTP 服务，并用 Microsoft Edge 的应用窗口显示界面。抽选、完成任务等操作以单条指令发送给 Python。表单编辑和通过校验的导入操作提交整个工作区快照。事务提交后，界面显示服务返回的棋盘状态。
 
 ## 从源码构建
 

@@ -41,7 +41,9 @@ If a candidate fails an upgrade test, keep the old executable and the pre-upgrad
 
 The first desktop build adds offline double-click launch, a durable SQLite workspace per Windows account and transfer of single boards or full saves between editions. It carries over the sample, notes and images, Task steps, manual endings, day boundary, bilingual UI and Stats. The in-app **Update** page lists shared feature changes.
 
-Planned shared features include more round goals and draw options, optional timers and Pomodoro sessions, finer time increments, and comparing planned with actual focus time. Optional script and AI interpretation of personal statistics is also planned. The [architecture notes](../README.md) describe what future integrations and cloud sync would require.
+**Planned for Windows.** Build a desktop interface with PySide6 (Qt Widgets) so the board can run without a browser. It will reuse the Python board rules and SQLite saves and follow the same interactions as the web edition.
+
+Planned shared features include more round goals and draw options, optional timers and Pomodoro sessions, finer time increments, and comparing planned with actual focus time. Optional script and AI interpretation of personal statistics is also planned. A future plugin can call the Python rules and storage modules. Cloud sync would also require user accounts, per-board access controls and a policy for merging offline edits.
 
 <a id="zh"></a>
 
@@ -86,4 +88,6 @@ Get-FileHash -Algorithm SHA256 -LiteralPath 'windows/out/ADHD Todo.exe'
 
 首版支持双击离线启动，按 Windows 账户保存固定的 SQLite 文件，还可以和网页版互导单棋盘或全量存档。示例、图文备注、任务步骤、手动收工、自定义分日、中英文和统计都沿用网页版体验。程序内的**更新**页可以查看两版共有的功能变化。
 
-后续共用功能包括更多轮次目标与抽选选项、可选计时器和番茄钟、更细的时间单位、预计和实际专注时长对比，以及用脚本和可选 AI 接口解读个人统计。未来接插件或做云同步时需要增加哪些能力，见[架构说明](../README.md#zh)。
+**Windows 版后续计划。** 使用 PySide6（Qt Widgets）实现可独立于浏览器运行的桌面界面，复用现有 Python 棋盘规则和 SQLite 存档，操作方式与网页版保持一致。
+
+后续共用功能包括更多轮次目标与抽选选项、可选计时器和番茄钟、更细的时间单位、预计和实际专注时长对比，以及用脚本和可选 AI 接口解读个人统计。未来的插件可以调用现有 Python 规则和存储模块。云同步还需要用户账户、棋盘访问权限和离线修改的合并规则。
