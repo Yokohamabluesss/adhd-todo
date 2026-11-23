@@ -2,6 +2,8 @@
 
 [中文说明](#zh)
 
+**[Play ADHD Todo in your browser](https://yokohamabluesss.github.io/adhd-todo/)** on a phone or computer. Your progress saves in the browser you play in.
+
 ADHD Todo is for people with ADHD. Let chance pick your first small step and a lucky Bingo be your cue to call it a day. Enjoy your round!
 
 On your first visit, **Sample board** opens with all nine squares filled. Choose **Start round → Draw a task** to try it immediately, or open **Stats** to explore 30 simulated days, 38 finished rounds and 75 task completions. Choose **+ Board** for an empty personal board. The language button beside the logo switches between English and Simplified Chinese.
@@ -86,6 +88,8 @@ The author designed the task flow and game rules. AI assisted with implementatio
 <a id="zh"></a>
 
 # ADHD Todo 中文说明
+
+**[点这里直接玩 ADHD Todo](https://yokohamabluesss.github.io/adhd-todo/)**。手机和电脑浏览器都可以打开，进度保存在你试玩的浏览器里。
 
 希望有 ADHD 的你既能轻松开始，也能安心收工。让抽签帮你选第一步，遇上 Bingo 就可以说「今天做到这里也很好」。祝你玩得开心！
 
