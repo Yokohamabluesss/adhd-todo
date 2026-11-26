@@ -39,6 +39,10 @@ If a candidate fails an upgrade test, keep the old executable and the pre-upgrad
 
 ## Changes and next steps
 
+**November 26, 2026.** Random fill can add tasks from both libraries to empty squares. The setup dialog previews how many everyday and one-off tasks fit.
+
+**November 25, 2026.** Notes support web links. Tasks can be copied to their own library or moved between libraries to change type. Empty library slots display **+**. The in-app Update page dates the latest update.
+
 The first desktop build adds offline double-click launch, a durable SQLite workspace per Windows account and transfer of single boards or full saves between editions. It carries over the sample, notes and images, Task steps, manual endings, day boundary, bilingual UI and Stats. The in-app **Update** page lists shared feature changes.
 
 **Planned for Windows.** Build a desktop interface with PySide6 (Qt Widgets) so the board can run without a browser. It will reuse the Python board rules and SQLite saves and follow the same interactions as the web edition.
@@ -85,6 +89,10 @@ Get-FileHash -Algorithm SHA256 -LiteralPath 'windows/out/ADHD Todo.exe'
 若升级验证失败，保留旧 exe 和升级前的备份，用单独的 `--data-dir` 重现。回到旧版本前，先在独立目录导入由旧版本制作的备份，确认轮次完整再继续。
 
 ## 本版更新与后续
+
+**2026 年 11 月 26 日。** 摆盘页可从两库随机填充主板空格，确认前可预览实际能加入的日常和临时任务数量。
+
+**2026 年 11 月 25 日。** 备注支持网址。任务可复制到对应库，也可在两库之间移动以转换类型。库中空格显示 **+**。程序内的更新页显示最近一次更新及其日期。
 
 首版支持双击离线启动，按 Windows 账户保存固定的 SQLite 文件，还可以和网页版互导单棋盘或全量存档。示例、图文备注、任务步骤、手动收工、自定义分日、中英文和统计都沿用网页版体验。程序内的**更新**页可以查看两版共有的功能变化。
 

@@ -15,6 +15,70 @@ function withTasks(indices, size = 3) {
   g.start(b, new Date(2026,10,18,20));
   return b;
 }
+test('copy starts a new task identity and conversion preserves it without affecting an open round', () => {
+  const b = withTasks([0]);
+  const original = b.cells[0];
+  original.placement = 'on-board';
+  original.note = {text:'https://example.org'};
+  original.steps = {size:2,slots:[{title:'Read page 1',done:true},null,null,null]};
+  g.copyTask(b,'board',0);
+  const copy = b.daily.slots[0];
+  assert.notEqual(copy.source,original.source);
+  assert.equal(copy.placement,undefined);
+  assert.deepEqual(copy.steps,original.steps);
+  copy.steps.slots[0].title = 'Read page 2';
+  copy.note.text = 'Second note';
+  assert.equal(original.steps.slots[0].title,'Read page 1');
+  assert.equal(original.note.text,'https://example.org');
+  g.moveBetweenLibraries(b,'daily',0,5);
+  assert.equal(b.daily.slots[0],null);
+  assert.deepEqual(b.temporary.slots[5],{...copy,library:'temporary'});
+  g.moveBetweenLibraries(b,'temporary',5);
+  assert.deepEqual(b.daily.slots[0],copy);
+  assert.equal(b.temporary.slots[5],null);
+  assert.deepEqual(b.events.map(e=>e.kind),['created']);
+  assert.equal(b.balance,0);
+  assert.equal(b.history.length,0);
+  assert.equal(b.cells[0],original);
+});
+test('random fill respects separate quotas, protects occupied squares, and records ordinary placements', () => {
+  const b = g.createBoard('Fill');
+  b.daily.slots[0] = makeTask('Daily must','X');
+  b.daily.slots[1] = makeTask('Daily low','Low');
+  b.temporary.slots = Array.from({length:9},(_,i)=>makeTask('One-off '+i,i<5?'X':'Standard','temporary'));
+  b.cells[0] = makeTask('Already placed');
+  g.start(b);
+  g.complete(b,0);
+  b.cells[4] = makeTask('Keep me');
+  const marks = [b.cells[0],b.cells[4]];
+  g.randomFill(b,4,()=>0.4);
+  assert.deepEqual([b.cells[0],b.cells[4]],marks);
+  assert.equal(b.cells.filter(c=>c===null).length,2); // daily has two tasks for four spaces
+  const placed = b.cells.filter(c=>g.isTask(c) && c.title!=='Keep me');
+  assert.equal(placed.length,5);
+  assert.equal(placed.filter(t=>t.library==='temporary' && t.priority==='X').length,3);
+  assert.equal(new Set(placed.map(t=>t.placement)).size,5);
+  assert.equal(new Set(placed.map(t=>t.source)).size,5);
+  assert.equal(b.daily.slots.filter(Boolean).length,2);
+  assert.equal(b.temporary.slots.filter(Boolean).length,6);
+  assert.equal(b.events.filter(e=>e.kind==='placed').length,5);
+  assert.ok(g.active(b));
+  assert.throws(()=>g.randomFill(b,3),/empty squares/);
+});
+test('fill randomly selects excess Must-dos and gives Low the same chance as Standard', () => {
+  const selected = (priorities,random) => {
+    const b = g.createBoard('Odds');
+    b.weights = {Standard:100,Low:1};
+    priorities.forEach((p,i)=>b.daily.slots[i]=makeTask(String(i),p));
+    g.randomFill(b,1,()=>random);
+    return b.cells.find(g.isTask).title;
+  };
+  for (const random of [0,.99]) {
+    assert.equal(selected(['Low','Standard'],random),selected(['Standard','Low'],random));
+    assert.equal(selected(['Standard','X','Low'],random),'1');
+  }
+  assert.notEqual(selected(['X','X'],0),selected(['X','X'],.99));
+});
 test('deleting the default board preserves another board with the same name and its open round', async () => {
   const remaining = withTasks([0,1]), removed = g.createBoard(remaining.name);
   const state = {boards:[removed,remaining], defaultId:removed.id};

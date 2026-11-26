@@ -6,7 +6,7 @@ ADHD Todo is for people with ADHD. Let chance pick your first small step and a l
 
 **[Play ADHD Todo in your browser](https://yokohamabluesss.github.io/adhd-todo/)** on a phone or computer. Your progress saves in the browser you play in.
 
-**[Download ADHD Todo for Windows](https://github.com/Yokohamabluesss/adhd-todo/releases/tag/windows-v0.1.0-preview.1)** from the release page under **Assets**. The offline app requires Windows x64 with Microsoft Edge installed. [Windows setup and illustrated guides](windows/README.md)
+**[Download ADHD Todo for Windows](https://github.com/Yokohamabluesss/adhd-todo/releases/latest)** from the release page under **Assets**. The offline app requires Windows x64 with Microsoft Edge installed. [Windows setup and illustrated guides](windows/README.md)
 
 On your first visit, **Sample board** opens with all nine squares filled. Choose **Start round → Draw a task** to try it immediately, or open **Stats** to explore 30 simulated days, 38 finished rounds and 75 task completions. Choose **+ Board** for an empty personal board. The language button beside the logo switches between English and Simplified Chinese.
 
@@ -20,7 +20,7 @@ Put what is on your mind on the board. If that is “Write my paper”, save it 
 
 1. **Choose what goes on the board.** In **Set up**, add a task to a library and tap an empty square to place it, or drag it there. Everyday tasks can be used repeatedly. One-off tasks move onto the board. Leave as many squares empty as you like. Drag an unfinished task back to its own library to take it off the board.
 2. **Draw or pick a task.** While any Must-do squares remain, the draw chooses only among them, with equal chances. Otherwise each Standard square has twice the weight of a Low square by default. Adjust the weights in **Set up → Board settings**. **Guide → How the draw works** shows the odds for your board. You can always choose a square yourself.
-3. **Take a small step.** Select a square and open **Task steps** to give it a 2×2 step grid. Finishing a step clears its text. Confirm **Complete task** on the main board when the whole task is done. Right-click a square to edit the task, open its steps or add a note. Notes support text and one JPEG, PNG or WebP image. Select the square to open its note from the card beneath the controls.
+3. **Take a small step.** Select a square and open **Task steps** to give it a 2×2 step grid. Finishing a step clears its text. Confirm **Complete task** on the main board when the whole task is done. Right-click a square to edit the task, open its steps or add a note. Choose **Copy task** to put an independent copy in its library. In **Set up**, drag a library task to the other library to change its type. Notes support text, clickable web links and one JPEG, PNG or WebP image. Select the square to open its note from the card beneath the controls.
 4. **Decide when to stop.** A full row, column or main diagonal of squares completed this round makes a Bingo. A line plus all Must-do tasks finished earns success. Finishing everything on a sparse board also succeeds. Each main task earns one point per full 30 planned minutes, with a minimum of one. A shuffle costs one point per square already completed this round and moves the completion marks too. Choose **End round** when you’re ready. Unfinished tasks and their steps carry over.
 
 | To explore | Open |
@@ -49,6 +49,8 @@ On Windows PowerShell, use `npm.cmd` if needed. For the production build, stop t
 3. The phone keeps its own progress. To move an open round between devices, export and import a save as described below.
 
 ## Saves and board settings
+
+In **Set up → Random fill**, choose how many empty squares to reserve for everyday tasks (default 6, capped at the number of empty squares). On a board with nine empty squares, choosing six reserves three for one-offs. Each library draws its Must-dos first, randomly if there are too many. Standard and Low have equal chances during filling. Each library entry is picked at most once per fill. If a library runs short, its spare squares stay empty.
 
 In **Set up** on the sample board, hover over, focus or tap the **?** beside an action to see what it does. Try moving **Return a library book** from the One-off library onto an empty square. On the full starting grid, first return an everyday square to its library to make room. On any board, **Board settings** has help beside **Day starts at**, **Side length** and **Group by row**.
 
@@ -95,7 +97,7 @@ The author designed the task flow and game rules. AI assisted with implementatio
 
 **[点这里直接玩 ADHD Todo](https://yokohamabluesss.github.io/adhd-todo/)**。手机和电脑浏览器都可以打开，进度保存在你试玩的浏览器里。
 
-**[下载 ADHD Todo Windows 版](https://github.com/Yokohamabluesss/adhd-todo/releases/tag/windows-v0.1.0-preview.1)**，在发布页的 **Assets** 下点 `ADHD.Todo.exe`。本版支持离线使用，需要 Windows x64 和本机已安装的 Microsoft Edge。[Windows 版说明和图文指南](windows/README.md#zh)
+**[下载 ADHD Todo Windows 版](https://github.com/Yokohamabluesss/adhd-todo/releases/latest)**，在发布页的 **Assets** 下点 `ADHD.Todo.exe`。本版支持离线使用，需要 Windows x64 和本机已安装的 Microsoft Edge。[Windows 版说明和图文指南](windows/README.md#zh)
 
 首次打开会进入 **Sample board**，九个格子都已摆好。点 **Start round → Draw a task**（开始本轮 → 抽一项任务）就能试玩。打开 **Stats**（统计）可以查看 30 个模拟使用日、38 个已结束轮次和 75 次任务完成。想从空盘开始，点 **+ Board** 新建个人棋盘。标志旁的语言按钮可以切换英文和简体中文。
 
@@ -109,7 +111,7 @@ The author designed the task flow and game rules. AI assisted with implementatio
 
 1. **只摆眼前想面对的事。** 在 **Set up**（摆盘）中往库里添加任务，再点一个空格放上去，也可以拖放。日常任务可反复取用，临时任务会从库里移到主板。棋盘可以留白。想撤下一项，在摆盘页把它拖回原来的任务库。
 2. **让棋盘选，也可以自己挑。** 只要还有必做任务，就只在必做格之间等概率抽选。其余时候，每个标准格的默认权重是低优先级格的两倍。在 **摆盘 → 棋盘设置** 调整权重，在 **使用指南** 查看当前盘面的实际概率。你随时可以手选其他任务。
-3. **先动一小步。** 选中格子，打开 **Task steps**（任务步骤），从 2×2 的步骤矩阵开始。完成子步骤会清空子格文字。等整件事做完，再到主板确认 **完成任务**。电脑上右键格子可编辑任务、打开步骤或添加备注。备注支持文字和一张 JPEG、PNG 或 WebP 图片。选中格子后，点操作栏下方的备注卡片即可查看详情。
+3. **先动一小步。** 选中格子，打开 **Task steps**（任务步骤），从 2×2 的步骤矩阵开始。完成子步骤会清空子格文字。等整件事做完，再到主板确认 **完成任务**。电脑上右键格子可编辑任务、打开步骤或添加备注。点**复制任务**会在对应库里新建副本。在**摆盘**页把库里的任务拖到另一个库，即可转换类型。备注支持文字、可点击的网址和一张 JPEG、PNG 或 WebP 图片。选中格子后，点操作栏下方的备注卡片即可查看详情。
 4. **自己决定何时收工。** 本轮亲手完成一整行、一整列或一条大对角线即可 Bingo。有连线且必做任务全部完成，本轮成功；盘面留白时做完摆上的所有任务，也算成功。主任务按预计时长每满 30 分钟给 1 点，最少 1 点。打乱花费等于本轮已完成格数，完成标记也跟着移动。想收工时点 **结束本轮**，未完成的任务和步骤会留到下一轮。
 
 | 想做什么 | 看哪一份 |
@@ -138,6 +140,8 @@ Windows PowerShell 下可用 `npm.cmd`。要使用正式构建，先停止开发
 3. 手机独立保存进度。要把电脑上进行的轮次带到手机，可以用下面的存档功能。
 
 ## 存档与棋盘设置
+
+在**摆盘 → 随机填充**中，选择给日常任务预留几个空格。默认 6 格，空位不足 6 格时取实际空位数。比如主板有 9 个空格，选 6 个日常，就给临时任务留 3 格。各库分别优先抽必做，必做超额就随机选；剩下的标准和低优先级等概率。一次填充中每个库格最多入选一次，某库任务不够就留空。
 
 在示例的 **摆盘** 页，将鼠标移到按钮旁的 **?**，用 Tab 聚焦它，或轻点它，就能看到点击后的效果。可以先把满盘中的一个日常任务退回库里，腾出一格，再从临时库把 **Return a library book**（还图书馆的书）放上去。所有棋盘的 **棋盘设置** 都在 **一天的开始时间**、**每边格数** 和 **按行分组** 旁提供问号说明。
 

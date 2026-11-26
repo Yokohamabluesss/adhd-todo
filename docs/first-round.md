@@ -8,7 +8,7 @@ Your first visit opens Sample board with all nine squares filled. To follow the 
 
 ## 1. Put four tasks on the board
 
-Choose **Set up board**. Under **Everyday library**, tap **+ Add**, enter the first task below and choose **Save task**. The saved task is already selected. Tap the target square to place a copy. Repeat for the other two everyday tasks. Use the **One-off library** for the outline. The example uses today’s date in the optional **Due date** field. You can also drag a task from a library on a computer.
+Choose **Set up board**. Under **Everyday library**, tap **+**, enter the first task below and choose **Save task**. The saved task is already selected. Tap the target square to place a copy. Repeat for the other two everyday tasks. Use the **One-off library** for the outline. The example uses today’s date in the optional **Due date** field. You can also drag a task from a library on a computer.
 
 | Task | Priority | Planned minutes | Square on a 3×3 board |
 | --- | --- | ---: | --- |
@@ -75,7 +75,7 @@ Use the same home Wi-Fi and follow the [phone connection steps in the README](..
 
 ## 1. 摆上四项任务
 
-点 **Set up board**（开始摆盘）。在 **Everyday library**（日常任务库） 点 **+ Add**（添加），填入下面的第一项，再点 **Save task**（保存任务）。刚保存的任务已经选中，点主板上的目标格即可放一份。用同样的方式放好另外两项日常任务。提纲放进 **One-off library**（临时任务库）。示例在可选的 **Due date**（截止日期）里填了今天。电脑上也可以从库里拖到主板。
+点 **Set up board**（开始摆盘）。在 **Everyday library**（日常任务库） 点 **+**（添加），填入下面的第一项，再点 **Save task**（保存任务）。刚保存的任务已经选中，点主板上的目标格即可放一份。用同样的方式放好另外两项日常任务。提纲放进 **One-off library**（临时任务库）。示例在可选的 **Due date**（截止日期）里填了今天。电脑上也可以从库里拖到主板。
 
 | 任务 | 优先级 | 预计分钟数 | 在 3×3 棋盘中的位置 |
 | --- | --- | ---: | --- |

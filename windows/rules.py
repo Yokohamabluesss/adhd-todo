@@ -113,6 +113,12 @@ def key(cell):
     return "done" if done(cell) else None
 
 
+def randomize(items, rng):
+    for i in range(len(items) - 1, 0, -1):
+        j = int(rng.random() * (i + 1))
+        items[i], items[j] = items[j], items[i]
+
+
 def shuffle(board, at, rng):
     r = active(board)
     require(r, "Start a round first.")
@@ -124,9 +130,7 @@ def shuffle(board, at, rng):
     movable = next((g for g in groups if any(key(c) != key(g[0]) for c in g)), None)
     require(movable, "There is no different arrangement to shuffle into.")
     for group in groups:
-        for i in range(len(group) - 1, 0, -1):
-            j = int(rng.random() * (i + 1))
-            group[i], group[j] = group[j], group[i]
+        randomize(group, rng)
     if [key(c) for g in groups for c in g] == list(map(key, cells)):
         j = next(i for i, c in enumerate(movable) if key(c) != key(movable[0]))
         movable[0], movable[j] = movable[j], movable[0]
@@ -184,6 +188,37 @@ def index_of(slots, index):
     return index
 
 
+def empty_library_slot(board, library, slot=None):
+    slots = board[library]["slots"]
+    label = "everyday" if library == "daily" else "one-off"
+    if slot is None:
+        require(None in slots, f"Make room in the {label} library first.")
+        return slots.index(None)
+    require(slots[index_of(slots, slot)] is None, f"Choose an empty slot in the {label} library.")
+    return slot
+
+
+def library_action(board, action, at):
+    source = action["from"]
+    copying = action["kind"] == "copy"
+    require(source in ("daily", "temporary") or (copying and source == "board"), "Invalid library.")
+    slots = board["cells"] if source == "board" else board[source]["slots"]
+    index = index_of(slots, action["index"])
+    original = slots[index]
+    require(task(original), "Select an unfinished task.")
+    if copying:
+        target = empty_library_slot(board, original["library"])
+        item = dict(deepcopy(original), source=str(uuid4()))
+        item.pop("placement", None)
+        board[item["library"]]["slots"][target] = item
+        record(board, "created", at, {k: item[k] for k in ("source", "library", "category", "priority")})
+    else:
+        library = "temporary" if source == "daily" else "daily"
+        target = empty_library_slot(board, library, action.get("slot"))
+        board[library]["slots"][target] = dict(original, library=library)
+        slots[index] = None
+
+
 def transfer(board, action, at):
     cells = board["cells"]
     kind = action["kind"]
@@ -215,15 +250,25 @@ def transfer(board, action, at):
         require(not dest or dest["library"] == library, f"Return this task to the {label} library.")
         slots = board[library]["slots"]
         if library == "temporary" or (dest and not any(c and c["source"] == t["source"] for c in slots)):
-            free = (dest or {}).get("slot")
-            if free is None:
-                require(None in slots, f"Make room in the {label} library first.")
-                free = slots.index(None)
-            require(slots[index_of(slots, free)] is None, f"Choose an empty slot in the {label} library.")
+            free = empty_library_slot(board, library, (dest or {}).get("slot"))
             slots[free] = {k: v for k, v in t.items() if k != "placement"}
     cells[i] = None
     record(board, "removed", at, attributes(t, i))
     evaluate(board)
+
+
+def random_fill(board, daily, at, rng):
+    empty = [i for i, cell in enumerate(board["cells"]) if cell is None]
+    require(type(daily) is int and 0 <= daily <= len(empty), "Choose a count within the empty squares.")
+    randomize(empty, rng)
+    targets = iter(empty)
+    for library, quota in (("daily", daily), ("temporary", len(empty) - daily)):
+        slots = board[library]["slots"]
+        candidates = [i for i, item in enumerate(slots) if item is not None]
+        randomize(candidates, rng)
+        candidates.sort(key=lambda i: slots[i]["priority"] != "X")
+        for index in candidates[:quota]:
+            transfer(board, {"kind": "place", "library": library, "from": index, "to": next(targets)}, at)
 
 
 def apply(board, action, at=None, rng=random):
@@ -265,6 +310,10 @@ def apply(board, action, at=None, rng=random):
         reset(board, action["scope"], at, action.get("day"))
     elif kind in ("place", "move", "return", "discard"):
         transfer(board, action, at)
+    elif kind in ("copy", "convert"):
+        library_action(board, action, at)
+    elif kind == "fill":
+        random_fill(board, action["daily"], at, rng)
     else:
         raise ValueError("Unknown board action.")
     if "noteImages" in board:

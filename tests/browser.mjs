@@ -95,7 +95,7 @@ try {
     else await cell(to).click();
     await page.waitForFunction(({i,t}) => document.querySelector('[data-cell="'+i+'"]').textContent.includes(t),{i:to,t:title});
   }
-  assert.ok(await slot('temporary',0).getByText('+ Add',{exact:true}).isVisible());
+  assert.ok(await slot('temporary',0).getByText('+',{exact:true}).isVisible());
   await page.reload(); await click('Set up');
   await cell(0).click({button:'right'});
   await page.locator('.task-menu').getByRole('button',{name:'Edit task',exact:true}).click();
@@ -291,7 +291,8 @@ try {
   await click('Update');
   await page.getByRole('heading',{name:'Planned updates'}).waitFor();
   await page.getByRole('heading',{name:'Latest changes'}).waitFor();
-  await page.getByText('Drag an unfinished task from the board back to its library in Set up.').waitFor();
+  await page.locator('time[datetime="2026-11-26"]').waitFor();
+  await page.getByText(/Randomly fill empty board squares/).waitFor();
   await page.getByText(/optional task timer and Pomodoro/).waitFor();
   await click('Stats');
   assert.equal(await button(page,'Explore sample board').count(),0);
@@ -415,7 +416,7 @@ try {
   await click('Set up board'); await slot('daily',0).click();
   await page.getByLabel('Task name').fill('Read');
   await page.getByText('Task note (optional)',{exact:true}).click();
-  const originalNote='Read page one.\nUnderline the example.';
+  const originalNote='Read https://example.com/page?q=1&lang=en.\nAlso see (https://example.org/Title_(book)).';
   await page.getByLabel('Note text').fill(originalNote);
   await page.getByLabel('Attach an image').setInputFiles('docs/walkthrough/01-add-task.png');
   await page.getByAltText('Attached image',{exact:true}).waitFor();
@@ -445,6 +446,8 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.setViewportSize({width:1280,height:850});
   await click('View task note');
+  assert.deepEqual(await page.locator('.note-details a').evaluateAll(links=>links.map(a=>a.href)),
+    ['https://example.com/page?q=1&lang=en','https://example.org/Title_(book)']);
   assert.equal(await page.locator('.note-details p').textContent(),originalNote); await confirm('Close');
   await click('Saves');
   const noteDownload=page.waitForEvent('download'); await confirm('Download all boards');
@@ -495,6 +498,18 @@ try {
   await page.locator('[data-cell="2"].empty').waitFor();
   await click('Set up');
   assert.equal(await page.locator('[data-library="temporary"]:not(.vacant)').count(),0);
+  await cell(1).click({button:'right'});
+  await button(page.locator('.task-menu'),'Copy task').click();
+  await slot('daily',1).getByText('Read').waitFor();
+  // Keep both libraries visible throughout the drag on tall setup pages.
+  await page.locator('.libraries').evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+  await slot('daily',1).dragTo(slot('temporary',3),{steps:16});
+  await slot('temporary',3).getByText('Read').waitFor();
+  await slot('temporary',3).click(); await click('Copy task');
+  await slot('temporary',0).getByText('Read').waitFor();
+  await slot('temporary',3).dragTo(page.locator('[data-shelf="daily"] h2'),{steps:16});
+  await slot('daily',1).getByText('Read').waitFor();
+  assert.equal(await slot('temporary',3).textContent(),'+');
   const boardCount = await page.locator('#boards option').count();
   await click('Saves');
   const singleDownload = page.waitForEvent('download');
@@ -510,6 +525,19 @@ try {
   await cell(1).click(); await click('View task note');
   await page.getByAltText('Task note attachment').waitFor();
   await confirm('Close');
+  await click('Set up');
+  const beforeFill = await page.locator('.cell.empty').count();
+  await click('Random fill');
+  const dailyCount = page.getByLabel('Everyday squares');
+  assert.equal(await dailyCount.inputValue(),String(Math.min(6,beforeFill)));
+  await dailyCount.fill('0');
+  await page.getByRole('dialog').getByText(/Will add 0 everyday and 1 one-off/).waitFor();
+  await confirm('Cancel');
+  assert.equal(await page.locator('.cell.empty').count(),beforeFill);
+  await click('Random fill'); await dailyCount.fill('1');
+  await confirm('Fill squares');
+  await page.waitForFunction(n=>document.querySelectorAll('.cell.empty').length===n,beforeFill-2);
+  assert.equal(await page.locator('[data-library="temporary"]:not(.vacant)').count(),0);
   assert.deepEqual(errors,[]);
   console.log('Browser flow passed, including refresh, concurrent completion, invalid import, SQLite round trip and narrow viewport.');
 } finally { await browser.close(); }

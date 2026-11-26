@@ -1,5 +1,6 @@
 """Exercise the built Windows executable twice with its own disposable Edge profile."""
 import functools
+import argparse
 import ctypes
 from ctypes import wintypes
 import json
@@ -20,8 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 @contextmanager
-def app_window(directory, port):
-    exe = ROOT / "windows/out/ADHD Todo.exe"
+def app_window(directory, port, exe):
     proc = subprocess.Popen([str(exe), "--data-dir", str(directory), "--port", str(port)])
     url = f"http://127.0.0.1:{port}/"
     try:
@@ -78,6 +78,9 @@ class QuietFiles(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--exe", type=Path, default=ROOT / "windows/out/ADHD Todo.exe")
+    exe = parser.parse_args().exe.resolve()
     handler = functools.partial(QuietFiles, directory=str(ROOT / "windows/.build/ui"))
     with tempfile.TemporaryDirectory() as tmp, ThreadingHTTPServer(("127.0.0.1", 0), handler) as web:
         Thread(target=web.serve_forever, daemon=True).start()
@@ -86,13 +89,13 @@ if __name__ == "__main__":
             port = probe.getsockname()[1]
         directory = Path(tmp)
         try:
-            with app_window(directory, port) as url:
+            with app_window(directory, port, exe) as url:
                 subprocess.run(["node", "--experimental-strip-types", "windows/test_transfer.mjs",
                                 f"http://127.0.0.1:{web.server_port}/", url], cwd=ROOT, check=True)
             with closing(sqlite3.connect(directory / "boards.sqlite")) as db:
                 assert db.execute("SELECT balance FROM boards").fetchall() == [(4,)]
                 assert db.execute("SELECT count(*) FROM completion_metrics").fetchone()[0] == 2
-            with app_window(directory, port) as url:
+            with app_window(directory, port, exe) as url:
                 with urlopen(url) as response:
                     token = re.search(rb'name="desktop-session" content="([0-9a-f]+)"', response.read())[1].decode()
                 with urlopen(Request(url + "api/state", headers={"X-Desktop-Session": token})) as response:

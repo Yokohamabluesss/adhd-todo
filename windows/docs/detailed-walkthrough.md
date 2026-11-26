@@ -10,6 +10,8 @@ For a quick introduction, [play your first round](first-round.md). This guide fo
 
 ## Set up the writing board
 
+In **Set up → Random fill**, choose how many empty squares to reserve for everyday tasks (default 6, capped at the number of empty squares). On a board with nine empty squares, choosing six reserves three for one-offs. Each library draws its Must-dos first, randomly if there are too many. Standard and Low have equal chances during filling. Each library entry is picked at most once per fill. If a library runs short, its spare squares stay empty.
+
 On any board, the question marks beside **Day starts at**, **Side length** and **Group by row** explain what each setting changes. Hover over the question mark, focus it with Tab, or tap it. You can also read the size explanation during an open round, when the size is locked.
 
 Choose **+ Board** and name the new board *Writing break*. In **Set up → Board settings**, select **Default board** to reopen it on your next visit. Set **Day starts at** to 06:30 local time. A round started at 06:29 will belong to the previous day. Give Standard tasks 3 tickets and Low tasks 1. The preview shows 75% and 25% for one of each. Choose **Save settings**.
@@ -40,7 +42,7 @@ Reopen **Guide**. The paragraph now gets three of the four tickets, and stretchi
 
 ## Split a task and resume it
 
-Right-click *Draft a paragraph* and choose **Task steps**. On a touchscreen, tap the square and find **Task steps** below the board. Choose **Edit task** to change the parent’s properties. **Add note** (or **Edit note** for an existing note) lets you attach text and an image. **Delete task** asks for confirmation before discarding just this placement.
+Right-click *Draft a paragraph* and choose **Task steps**. On a touchscreen, tap the square and find **Task steps** below the board. Choose **Edit task** to change the parent’s properties. **Add note** (or **Edit note** for an existing note) lets you add text, web links and an image. Open the note card to follow a link. **Copy task** puts a separate copy in the task’s library. In Set up, drag a library task into the other library to change its type. **Delete task** asks for confirmation before discarding just this placement.
 
 ![Right-click menu on the paragraph square](detailed-walkthrough/06-task-menu.png)
 
@@ -118,6 +120,8 @@ Return to **Board**, choose **End round** and confirm. **Set up** now says **Bet
 
 ## 摆一块写作棋盘
 
+在**摆盘 → 随机填充**中，选择给日常任务预留几个空格。默认 6 格，空位不足 6 格时取实际空位数。比如主板有 9 个空格，选 6 个日常，就给临时任务留 3 格。各库分别优先抽必做，必做超额就随机选；剩下的标准和低优先级等概率。一次填充中每个库格最多入选一次，某库任务不够就留空。
+
 所有棋盘的 **Day starts at**（一天的开始时间）、**Side length**（每边格数）和 **Group by row**（按行分组）旁都有问号。鼠标移到问号上、用 Tab 聚焦它或轻点它，都能查看说明。进行中的轮次锁定尺寸，仍可查看每边格数的说明。
 
 点 **+ Board** 新建棋盘，命名为 *Writing break*。在 **Set up → Board settings** 中勾选 **Default board**，下次打开应用就会回到这块棋盘。把 **Day starts at** 改成当地时间 06:30；这样 06:29 开始的轮次仍归前一天。把 **Standard weight** 设为 3，**Low weight** 设为 1。预览显示两类任务各有一项时的概率为 75% 和 25%。点 **Save settings**。
@@ -148,7 +152,7 @@ Return to **Board**, choose **End round** and confirm. **Set up** now says **Bet
 
 ## 拆成小步骤，中途回来接着做
 
-右键点 *Draft a paragraph*，选 **Task steps**。触屏上可以点中该格，再滑到棋盘下方找 **Task steps**。同一菜单里的 **Edit task** 用来改主任务的属性。点 **Add note** 可以加文字和图片，已有备注时入口叫 **Edit note**。**Delete task** 会先让你确认，再删除这一格的任务。
+右键点 *Draft a paragraph*，选 **Task steps**。触屏上可以点中该格，再滑到棋盘下方找 **Task steps**。同一菜单里的 **Edit task** 用来改主任务的属性。点 **Add note** 可以加文字、网址和图片，打开备注卡片就能点击链接，已有备注时入口叫 **Edit note**。点 **Copy task** 会在对应库里新建独立副本。在摆盘页，把一个库中的任务拖到另一库即可转换类型。**Delete task** 会先让你确认，再删除这一格的任务。
 
 ![段落任务上的右键菜单](detailed-walkthrough/06-task-menu.png)
 

@@ -6,6 +6,9 @@ export type BoardCommand =
   | { kind: 'complete' | 'recordDraw' | 'discard'; index: number }
   | { kind: 'reset'; scope: ResetScope; day: string }
   | { kind: 'place'; library: Library; from: number; to: number }
+  | { kind: 'fill'; daily: number }
+  | { kind: 'copy'; from: Library | 'board'; index: number }
+  | { kind: 'convert'; from: Library; index: number; slot?: number }
   | { kind: 'move'; from: number; to: number }
   | { kind: 'return'; index: number; destination?: {library: Library; slot?: number} };
 
@@ -24,6 +27,9 @@ export function applyCommand(board: Board, command: BoardCommand) {
       return game.resetBoard(board,command.scope,now);
     }
     case 'place': return game.place(board,command.library,command.from,command.to);
+    case 'fill': return game.randomFill(board,command.daily);
+    case 'copy': return game.copyTask(board,command.from,command.index);
+    case 'convert': return game.moveBetweenLibraries(board,command.from,command.index,command.slot);
     case 'move': return game.move(board,command.from,command.to);
     case 'return': return game.removeFromBoard(board,command.index,command.destination);
   }

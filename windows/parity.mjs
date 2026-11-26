@@ -20,6 +20,9 @@ function scenario(name,setup,actions) {
       switch(a.kind) {
         case 'start': g.start(b,new Date(at)); break;
         case 'place': g.place(b,a.library,a.from,a.to,at); break;
+        case 'fill': g.randomFill(b,a.daily,random,at); break;
+        case 'copy': g.copyTask(b,a.from,a.index,at); break;
+        case 'convert': g.moveBetweenLibraries(b,a.from,a.index,a.slot); break;
         case 'pick': result=g.draw(b,random); break;
         case 'recordDraw': g.recordDraw(b,a.index,at); break;
         case 'complete': g.complete(b,a.index,at); break;
@@ -77,4 +80,15 @@ scenario('Repeated copies with row grouping',b=>{
   b.grouped=true;
 },[...Array.from({length:9},(_,i)=>place(0,i)),{kind:'start'},{kind:'shuffle'},complete(0),
   {kind:'shuffle',random:0.999},{kind:'finish'}]);
+scenario('Copy placements and convert library tasks',b=>{
+  b.daily.slots[0].note={text:'Read https://example.org'};
+  b.daily.slots[0].steps={size:2,slots:[{title:'Chapter one',done:false},null,null,null]};
+},[place(0,0),{kind:'start'},{kind:'copy',from:'board',index:0},
+   {kind:'convert',from:'daily',index:0,slot:0},{kind:'convert',from:'daily',index:0,slot:2},
+   {kind:'copy',from:'board',index:0},{kind:'copy',from:'temporary',index:2},
+   {kind:'convert',from:'temporary',index:1},complete(0),{kind:'copy',from:'board',index:0}]);
+scenario('Random fill with quotas, shortages and marked squares',b=>{
+  b.temporary.slots[3]={...b.temporary.slots[0],source:'urgent',priority:'X'};
+},[place(0,0),{kind:'start'},complete(0),{kind:'fill',daily:9},{kind:'fill',daily:2},
+   {kind:'fill',daily:0},{kind:'fill',daily:4},{kind:'fill',daily:0}]);
 console.log(JSON.stringify(cases));

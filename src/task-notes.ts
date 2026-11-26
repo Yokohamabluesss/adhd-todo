@@ -6,6 +6,23 @@ import type { Board, Task } from './rules.ts';
 function imageFor(b:Board,t?:Task|null) {
   return t?.note?.image ? b.noteImages?.[t.note.image] : undefined;
 }
+function linkedNoteText(text:string) {
+  let html = '', offset = 0;
+  for (const match of text.matchAll(/\bhttps?:\/\/[^\s<>"“”，。！？；（）]+/gi)) {
+    let label = match[0].replace(/[.,!?;:'’\]]+$/, '');
+    // Keep balanced parentheses in article titles and other URL paths.
+    if (label.endsWith(')')) {
+      const excess = label.split(')').length - label.split('(').length;
+      const trailing = label.match(/\)+$/)![0].length;
+      if (excess > 0) label = label.slice(0,-Math.min(excess,trailing));
+    }
+    if (!URL.canParse(label)) continue;
+    html += esc(text.slice(offset,match.index)) + '<a href="' + esc(new URL(label).href)
+      + '" target="_blank" rel="noopener noreferrer">' + esc(label) + '</a>';
+    offset = match.index + label.length;
+  }
+  return html + esc(text.slice(offset));
+}
 export function notePreview(b:Board,t?:Task|null) {
   if(!t?.note) return '';
   const data=imageFor(b,t);
@@ -16,7 +33,7 @@ export function notePreview(b:Board,t?:Task|null) {
 export function noteDetails(dialog:HTMLDialogElement,b:Board,t:Task,edit:()=>void) {
   const data=imageFor(b,t);
   dialog.innerHTML=`<h2 id="dialog-title">${tr("Task note")}</h2><p class="muted">${esc(t.title)}</p>
-    <div class="note-details">${t.note?.text?`<p>${esc(t.note.text)}</p>`:''}
+    <div class="note-details">${t.note?.text?`<p>${linkedNoteText(t.note.text)}</p>`:''}
     ${data?`<img src="${esc(data)}" alt="${tr("Task note attachment")}">`:''}</div>
     <div class="actions"><button type="button" data-edit>${tr("Edit note")}</button><button type="button" class="primary" data-close>${tr("Close")}</button></div>`;
   dialog.setAttribute('aria-labelledby','dialog-title');
@@ -26,7 +43,7 @@ export function noteDetails(dialog:HTMLDialogElement,b:Board,t:Task,edit:()=>voi
 }
 
 export function noteFields(t?:Task|null) {
-  return `<div class="stack note-fields"><label>${tr("Note text")}<textarea name="noteText" rows="4">${esc(t?.note?.text ?? '')}</textarea></label>
+  return `<div class="stack note-fields"><label>${tr("Note text")}<textarea name="noteText" rows="4" placeholder="${esc(tr("Write a note or paste a link (https://…)"))}">${esc(t?.note?.text ?? '')}</textarea></label>
     <label>${tr("Attach an image")}<input type="file" accept="image/jpeg,image/png,image/webp" data-image-file></label>
     <div data-attached hidden><img alt="${tr("Attached image")}"><button type="button" data-remove>${tr("Remove image")}</button></div>
     <small role="status" data-image-status></small></div>`;

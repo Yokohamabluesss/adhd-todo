@@ -228,6 +228,12 @@ function cellKey(c: Cell) {
   const {placement: _placement,...contents} = c;
   return JSON.stringify(contents);
 }
+function randomize<T>(items: T[], random: () => number) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+}
 export function shuffle(b: Board, random = Math.random, at = Date.now()) {
   check(active(b), 'Start a round first.');
   const cost = shuffleCost(b);
@@ -235,12 +241,7 @@ export function shuffle(b: Board, random = Math.random, at = Date.now()) {
   const groups = b.grouped ? b.rows.map((_, i) => b.cells.slice(i * b.size, (i + 1) * b.size)) : [b.cells.slice()];
   const movable = groups.find(g => new Set(g.map(cellKey)).size > 1);
   check(movable, 'There is no different arrangement to shuffle into.');
-  for (const g of groups) {
-    for (let i = g.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [g[i], g[j]] = [g[j], g[i]];
-    }
-  }
+  for (const group of groups) randomize(group,random);
   if (groups.flat().every((c, i) => cellKey(c) === cellKey(b.cells[i]))) {
     const j = movable.findIndex(c => cellKey(c) !== cellKey(movable[0]));
     [movable[0], movable[j]] = [movable[j], movable[0]];
@@ -328,10 +329,51 @@ export function place(b: Board, kind: Library, from: number, to: number, at = Da
   recordEvent(b,'placed',{...taskData(placed),square:to,size:b.size},at);
   if (kind === 'temporary') b[kind].slots[from] = null;
 }
+export function randomFill(b: Board, daily: number, random = Math.random, at = Date.now()) {
+  const empty = b.cells.flatMap((cell,i) => cell === null ? [i] : []);
+  check(Number.isInteger(daily) && daily >= 0 && daily <= empty.length, 'Choose a count within the empty squares.');
+  randomize(empty,random);
+  let next = 0;
+  for (const kind of ['daily','temporary'] as const) {
+    const slots = b[kind].slots;
+    const candidates = slots.flatMap((task,i) => task ? [i] : []);
+    randomize(candidates,random);
+    // A stable sort keeps each priority pool in uniformly random order.
+    candidates.sort((a,b) => Number(slots[b]!.priority === 'X') - Number(slots[a]!.priority === 'X'));
+    const quota = kind === 'daily' ? daily : empty.length - daily;
+    for (const from of candidates.slice(0,quota)) place(b,kind,from,empty[next++],at);
+  }
+}
 export function move(b: Board, from: number, to: number) {
   check(!active(b), 'Use Shuffle to rearrange an active round.');
   check(isTask(b.cells[from]) && to >= 0 && to < b.cells.length, 'Select a task to move.');
   [b.cells[from], b.cells[to]] = [b.cells[to], b.cells[from]];
+}
+function emptyLibrarySlot(b: Board, library: Library, slot?: number) {
+  const slots = b[library].slots;
+  const index = slot ?? slots.indexOf(null);
+  const name = library === 'daily' ? 'everyday' : 'one-off';
+  check(index !== -1, `Make room in the ${name} library first.`);
+  check(slots[index] === null, `Choose an empty slot in the ${name} library.`);
+  return index;
+}
+export function copyTask(b: Board, from: Library | 'board', index: number, at = Date.now()) {
+  const task = from === 'board' ? b.cells[index] : b[from].slots[index];
+  check(isTask(task), 'Select an unfinished task.');
+  const target = emptyLibrarySlot(b,task.library);
+  const copy = structuredClone(task);
+  delete copy.placement;
+  copy.source = newId();
+  b[copy.library].slots[target] = copy;
+  recordEvent(b,'created',{source:copy.source,library:copy.library,category:copy.category,priority:copy.priority},at);
+}
+export function moveBetweenLibraries(b: Board, from: Library, index: number, slot?: number) {
+  const task = b[from].slots[index];
+  check(isTask(task), 'Select an unfinished task.');
+  const library = from === 'daily' ? 'temporary' : 'daily';
+  const target = emptyLibrarySlot(b,library,slot);
+  b[library].slots[target] = {...task,library};
+  b[from].slots[index] = null;
 }
 export function removeFromBoard(b: Board, i: number, destination?: {library: Library; slot?: number}) {
   const task = b.cells[i];
@@ -341,9 +383,7 @@ export function removeFromBoard(b: Board, i: number, destination?: {library: Lib
   const slots = b[task.library].slots;
   // Everyday placements normally already have a template in the library.
   if (task.library === 'temporary' || (destination && !slots.some(t => t?.source === task.source))) {
-    const free = destination?.slot ?? slots.indexOf(null);
-    check(free !== -1, `Make room in the ${libraryName} library first.`);
-    check(slots[free] === null, `Choose an empty slot in the ${libraryName} library.`);
+    const free = emptyLibrarySlot(b,task.library,destination?.slot);
     const {placement: _placement,...returned} = task;
     slots[free] = returned;
   }

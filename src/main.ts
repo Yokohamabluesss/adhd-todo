@@ -155,8 +155,8 @@ function libraryPanel(b: Board, k: Library) {
   return `<section class="panel" data-shelf="${k}"><div class="sectiontop"><div class="board-name"><h2>${esc(tr(k === 'daily' ? 'Everyday library' : 'One-off library'))}</h2>${b.sample ? helpHint('shelf-'+k,tr('About {0}',tr(k==='daily'?'Everyday library':'One-off library')),"Select a library task, then select an empty board square. Everyday tasks place a copy. One-off tasks move out of the library. An empty library slot opens the task form.") : ''}</div>
     ${sampleButton(b,`size-${k}`,'Resize','small')}</div><p class="muted">${esc(tr(k === 'daily' ? 'Place a copy each time you use a task.' : 'Placing a task moves it onto the board.'))}</p>
     <div class="scroll-grid sectiongap"><div class="shelfgrid" style="--n:${shelf.size}">${shelf.slots.map((t,i) =>
-      `<button data-library="${k}" data-slot="${i}" draggable="${!!t}" class="libcell ${t ? 'priority-' + t.priority : 'vacant'} ${pick === i ? 'selected' : ''}" aria-label="${esc(tr('{0} slot {1}, {2}',tr(k === 'daily' ? 'Everyday' : 'One-off'),i+1,t?.title || tr('Add task')))}">${t ? esc(t.title) : esc(tr('+ Add'))}</button>`).join('')}
-    </div></div>${pick !== null ? `<div class="actions sectiongap">${sampleButton(b,'edit-library','Edit task','small')}${sampleButton(b,'steps','Task steps','small')}${sampleButton(b,'delete-library','Delete task','small quiet')}</div>` : ''}</section>`;
+      `<button data-library="${k}" data-slot="${i}" draggable="${!!t}" class="libcell ${t ? 'priority-' + t.priority : 'vacant'} ${pick === i ? 'selected' : ''}" aria-label="${esc(tr('{0} slot {1}, {2}',tr(k === 'daily' ? 'Everyday' : 'One-off'),i+1,t?.title || tr('Add task')))}">${t ? esc(t.title) : '+'}</button>`).join('')}
+    </div></div>${pick !== null ? `<div class="actions sectiongap">${sampleButton(b,'edit-library','Edit task','small')}${sampleButton(b,'steps','Task steps','small')}${btn('copy-task','Copy task','small')}${btn('convert-library',k === 'daily' ? 'Move to one-off library' : 'Move to everyday library','small')}${sampleButton(b,'delete-library','Delete task','small quiet')}</div>` : ''}</section>`;
 }
 const sampleActionTips = {
   'settings': "Open this board’s settings to change its size, day start, draw weights and row grouping.",
@@ -187,7 +187,8 @@ function controls(b: Board) {
     const chosen = source && source.kind !== 'board' ? b[source.kind].slots[source.index] : null;
     return `<aside class="panel"><h2>${tr("Set up your board")}</h2><p class="detail muted">${chosen ? esc(tr('Place “{0}” in an empty square.',chosen.title)) :
       esc(tr('Pick a library task, then click an empty square. Dragging works too.'))}</p>
-      <div class="stack">${sampleButton(b,'settings','Board settings')}${task ? sampleButton(b,'properties','Edit task') + sampleButton(b,'steps','Task steps') + sampleButton(b,'remove',t.library === 'temporary' ? 'Return to one-off library' : 'Remove from board') : ''}
+      <div class="stack">${sampleButton(b,'settings','Board settings')}${task ? sampleButton(b,'properties','Edit task') + sampleButton(b,'steps','Task steps') + btn('copy-task','Copy task') + sampleButton(b,'remove',t.library === 'temporary' ? 'Return to one-off library' : 'Remove from board') : ''}
+      ${btn('random-fill','Random fill','',!b.cells.includes(null) || !(b.daily.slots.some(Boolean) || b.temporary.slots.some(Boolean)))}
       ${sampleButton(b,r ? 'back' : 'start',r ? 'Return to round' : 'Start round','primary', !r && !b.cells.some(game.isTask))}</div></aside>${notePreview(b,task?t:chosen)}`;
   }
   return `<aside class="panel"><h2>${esc(tr(task ? 'Selected task' : r ? 'Choose a task' : 'Your next round'))}</h2>
@@ -195,7 +196,7 @@ function controls(b: Board) {
     b.cells.some(game.isTask) ? 'Your tasks are ready when you are.' : 'Add a few tasks from your libraries to get started.'))}</p>
     <div class="stack">${r ? sampleButton(b,'draw','Draw a task',task ? '' : 'primary', !b.cells.some(game.isTask)) +
       (task ? sampleButton(b,'complete','Complete task','primary') : '') : b.cells.some(game.isTask) ? sampleButton(b,'start','Start round','primary') : btn('setup','Set up board','primary')}
-      ${task ? sampleButton(b,'properties','Edit task') + sampleButton(b,'steps','Task steps') : ''}
+      ${task ? sampleButton(b,'properties','Edit task') + sampleButton(b,'steps','Task steps') + btn('copy-task','Copy task') : ''}
       ${r ? sampleButton(b,'finish','End round','quiet') : ''}</div>
       </aside>${notePreview(b,task?t:null)}`;
 }
@@ -337,6 +338,31 @@ async function placeOrMove(s: Source, i: number) {
     {kind:'place',library:s.kind,from:s.index,to:i});
   source = null; selected = ok ? i : null; render();
 }
+function randomFillDialog(b: Board) {
+  const empty = b.cells.filter(c => c === null).length;
+  const availableDaily = b.daily.slots.filter(Boolean).length;
+  const availableOneOff = b.temporary.slots.filter(Boolean).length;
+  showDialog('Random fill', `<div class="stack">
+    <label>${tr("Everyday squares")}<input name="daily" type="number" min="0" max="${empty}" step="1" value="${Math.min(6,empty)}" required></label>
+    <p class="muted">${tr("The remaining empty squares are for one-offs. Each library picks Must-do first, then Standard and Low equally. Missing tasks leave squares empty.")}</p>
+    <output aria-live="polite"></output></div>`, 'Fill squares', async data => {
+    if (await commit({kind:'fill',daily:Number(data.get('daily'))})) {
+      resetSelection(); render();
+    }
+  });
+  const input = dialog.querySelector<HTMLInputElement>('[name="daily"]')!;
+  const preview = dialog.querySelector('output')!;
+  const submit = dialog.querySelector<HTMLButtonElement>('button.primary')!;
+  const refresh = () => {
+    const daily = Math.min(input.valueAsNumber,availableDaily);
+    const oneOff = Math.min(empty - input.valueAsNumber,availableOneOff);
+    preview.textContent = input.validity.valid ? tr('Will add {0} everyday and {1} one-off. Squares left empty: {2}.',daily,oneOff,empty-daily-oneOff)
+      : tr('Choose a count within the empty squares.');
+    submit.disabled = !input.validity.valid || daily + oneOff === 0;
+  };
+  input.oninput = refresh;
+  refresh();
+}
 async function chooseCell(i: number) {
   const c = board().cells[i];
   if (tab === 'Set up' && source?.kind !== 'board' && source) { await placeOrMove(source,i); return; }
@@ -415,6 +441,7 @@ async function action(key: string) {
     case 'setup': switchTab('Set up'); break;
     case 'back': switchTab('Board'); break;
     case 'settings': settings(); break;
+    case 'random-fill': randomFillDialog(b); break;
     case 'new-board': {
       const hasSample = loaded.state.boards.some(x => x.sample);
       const hasCurrentSample = loaded.state.boards.some(x => x.sample && (x.sampleVersion ?? 1) >= SAMPLE_VERSION);
@@ -454,6 +481,20 @@ async function action(key: string) {
     }
     case 'remove':
       if (i !== null && await commit({kind:'return',index:i})) { resetSelection(); render(); } break;
+    case 'copy-task': {
+      const target = i === null ? source : {kind:'board' as const,index:i};
+      if (!target) break;
+      const original = target.kind === 'board' ? b.cells[target.index] : b[target.kind].slots[target.index];
+      if (game.isTask(original) && await commit({kind:'copy',from:target.kind,index:target.index})) {
+        render(); message(original.library === 'daily' ? 'Copied to the everyday library.' : 'Copied to the one-off library.');
+      }
+      break;
+    }
+    case 'convert-library':
+      if (source && source.kind !== 'board' && await commit({kind:'convert',from:source.kind,index:source.index})) {
+        resetSelection(); render();
+      }
+      break;
     case 'delete-placement':
       if (i !== null && game.isTask(task)) {
         confirmAction('Delete task from board?',tr('Delete “{0}” from this square? Its notes and steps go with it. Both libraries keep their current contents.',task.title),'Delete task',async () => {
@@ -547,7 +588,7 @@ app.addEventListener('contextmenu',e => {
   selected = k ? null : i; source = {kind:k ?? 'board',index:i}; render();
   const menu = document.createElement('div');
   menu.popover = 'auto'; menu.className = 'task-menu';
-  menu.innerHTML = btn(k ? 'edit-library' : 'properties','Edit task') + btn('steps','Task steps') + btn('edit-note',t.note?'Edit note':'Add note');
+  menu.innerHTML = btn(k ? 'edit-library' : 'properties','Edit task') + btn('steps','Task steps') + btn('edit-note',t.note?'Edit note':'Add note') + btn('copy-task','Copy task');
   if (!k) menu.insertAdjacentHTML('beforeend',btn('delete-placement','Delete task'));
   app.append(menu); menu.showPopover();
   menu.style.left = Math.max(0,Math.min(e.clientX,innerWidth-menu.offsetWidth)) + 'px';
@@ -577,6 +618,11 @@ app.addEventListener('drop',e => {
   else if (s.kind === 'board' && shelf) {
     const slot = el?.dataset.slot;
     void commit({kind:'return',index:s.index,destination:{library:shelf,slot:slot === undefined ? undefined : Number(slot)}})
+      .then(ok => { if (ok) { resetSelection(); render(); } }).catch(report);
+  }
+  else if (shelf && s.kind !== 'board' && shelf !== s.kind) {
+    const slot = el?.dataset.slot;
+    void commit({kind:'convert',from:s.kind,index:s.index,slot:slot === undefined ? undefined : Number(slot)})
       .then(ok => { if (ok) { resetSelection(); render(); } }).catch(report);
   }
   else if (el?.dataset.library === s.kind && s.kind !== 'board') {
